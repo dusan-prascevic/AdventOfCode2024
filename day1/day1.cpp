@@ -2,6 +2,7 @@
 #include <cstddef>
 #include <fstream>
 #include <iostream>
+#include <unordered_map>
 #include <vector>
 
 int readInput(const std::string &filename, std::vector<int> &column1,
@@ -60,11 +61,51 @@ std::vector<int> vectorDifference(std::vector<int> &vec1,
   return differenceVec;
 }
 
+std::unordered_map<int, int> countOccurences(std::vector<int> &vec) {
+  std::unordered_map<int, int> mappedVector;
+
+  for (int entry : vec) {
+    mappedVector[entry]++;
+  }
+
+  // Print the counts
+  // for (const auto &pair : mappedVector) {
+  //   std::cout << pair.first << ": " << pair.second << std::endl;
+  // }
+
+  return mappedVector;
+}
+
+int similarityScore(std::vector<int> &column1, std::vector<int> &column2) {
+
+  int simScore = 0;
+
+  std::unordered_map<int, int> occurencesMapColumn2 = countOccurences(column2);
+  std::vector<int> weightedColumn1; // weighted by sim score of col2
+
+  for (size_t i = 0; i < column1.size(); ++i) {
+    if (auto search = occurencesMapColumn2.find(column1[i]);
+        search != occurencesMapColumn2.end()) {
+      if (search->first > 1) {
+        weightedColumn1.push_back(column1[i] * search->second);
+      }
+    } else {
+      weightedColumn1.push_back(0);
+    }
+  }
+
+  for (int num : weightedColumn1) {
+    simScore += num;
+  }
+
+  return simScore;
+}
+
 int main() {
   std::vector<int> column1, column2;
-
   readInput("input_day1.txt", column1, column2);
 
+  // Part 1: Sort ascending and compute diff and sum vector
   std::vector<int> ascendingColumn1 = sortAscending(column1);
   std::vector<int> ascendingColumn2 = sortAscending(column2);
 
@@ -79,10 +120,9 @@ int main() {
 
   std::cout << "Difference: " << diffSum << std::endl;
 
-  // for (size_t i = 0; i < ascendingColumn1.size(); ++i) {
-  //   std::cout << ascendingColumn1[i] << " " << ascendingColumn2[i] <<
-  //   std::endl;
-  // }
+  // Part 2: Compute similarity score and and multiply column1 entries by it
+  int simScoreColumn1 = similarityScore(column1, column2);
+  std::cout << "Similarity score: " << simScoreColumn1 << std::endl;
 
   return 0;
 }
